@@ -1,0 +1,124 @@
+#!/bin/bash
+################################################################################
+# @author       : Ángel Piñeiro
+# @date         : 24/11/2014
+# @version      : 1.1
+# @usage        : ./mitdb-get (-a|-r record) [-f sampfrec] [-o outputfolder]
+# @description  :
+#
+# This scrit downloads the MIT-BIH database from physionet and resample it to
+# the desired sampling frecuencies using the xform tool.
+#
+################################################################################
+USAGE="Usage: ./mitdb-get (-a|-r record) [-f sampfrec] [-o outputfolder]"
+# save current directory
+workdir=`pwd`
+# Database download URL
+DB_URL=http://www.physionet.org/physiobank/database/mitdb/
+# default behaviour: download all records and do not resample
+DOWNLOAD_FULL_DB=false
+RESAMPLE_AFTER_DL=false
+DOWNLOAD_DIR="mitdb"
+record=false
+
+# Parse arguments
+while [[ $# > 0 ]]
+do
+  key="$1"
+  case $key in
+    -r|--record)
+      record="$2"
+      DOWNLOAD_FULL_DB=false
+      shift
+      ;;
+    -f|--frequency)
+      sampfrec="$2"
+      RESAMPLE_AFTER_DL=true
+      shift
+      ;;
+    -o|--output)
+      DOWNLOAD_DIR="$2"
+      shift
+      ;;
+    -a|--all)
+      DOWNLOAD_FULL_DB=true
+      ;;
+  esac
+  shift
+done
+
+#echo "DOWNLOADALL: "${DOWNLOAD_FULL_DB}
+#echo "DOWNLOADDIR: "${DOWNLOAD_DIR}
+#echo "RECORD: "${record}
+#echo "SAMPFREQ: "${sampfrec}
+#echo "RESAMPLE: "${RESAMPLE_AFTER_DL}
+
+if [ "$record" = false ] && [ "$DOWNLOAD_FULL_DB" = false ]; then
+  echo ${USAGE}
+  echo -e "       One of -a or -r options is required"
+  exit 1
+fi
+
+# download MIT-BIH database if not present, assuming that the existence of
+# a directory called ${DOWNLOAD_DIR} means that the database is present
+if [ ! -d ${DOWNLOAD_DIR} ]; then
+    mkdir -p ${DOWNLOAD_DIR}/360Hz
+    echo "Downloading MIT-BIH database to ${DOWNLOAD_DIR} ..."
+    cd ${DOWNLOAD_DIR}/360Hz
+    if [ "$DOWNLOAD_FULL_DB" = true ] ; then
+        echo "Downloading records, this operation may take a while..."
+        wget -A *.hea,*.dat,*.atr -m -p -k -K -np -nd -nv -e robots=off ${DB_URL}
+    else
+        # iterate over records, that are comma separated
+        for r in $(echo $record | sed "s/,/ /g"); do
+          echo "Downloading record "${r}"..."
+          wget -m -p -k -K -np -nd -nv -e robots=off ${DB_URL}${r}.hea ${DB_URL}${r}.dat ${DB_URL}${r}.atr 2> /dev/null
+        done
+    fi
+    cd ${workdir}
+else
+   echo "MIT-BIH download directory already exists."
+fi
+
+# exit if it is not necessary to resample records
+if [ "$RESAMPLE_AFTER_DL" = false ] ; then
+  echo "Done."
+  exit 0
+fi
+
+# We need to resample the records under DOWNLOAD_DIR/360Hz
+#
+# Enter DOWNLOAD_DIR direcotry and export WFDB environmet it and to the
+# download subfolder (360Hz) where the original files are located
+cd ${DOWNLOAD_DIR}
+export WFDB=/:.:./360Hz
+
+# get a list with the records to resample
+mitrecords=`ls 360Hz/*.hea | cut -d '.' -f 1 | cut -d '/' -f 2`
+# and iterate over the resampling frequencies
+for s in $(echo ${sampfrec} | sed "s/,/ /g"); do
+    # Skip resample if the freq directory already exists
+    if [ ! -d ${s}Hz ]; then
+        echo "Resampling database to "${s}"Hz..."
+        # resample to each of the selected frecuencies, using xform
+        # Params are: 2signals, freq, current dir, format, gain,.... For more
+        # info see [https://www.physionet.org/physiotools/wag/xform-1.htm]
+        echo -e "2\n"${s}"\n\n16\ny\n200\n11\n1024\n200\n11\n1024" > xformparams.txt
+        for i in ${mitrecords}; do
+            # resample using xform, providing previously defined params
+            xform -i ${i} -a atr -n ${i} -S xformparams.txt > /dev/null 2> /dev/null
+        done
+        # move resampled files to a proper directory
+        mkdir ${s}Hz
+        echo "Moving resampled records to "${s}"Hz directory..."
+        mv *.hea *.dat *.atr ${s}Hz/ 2> /dev/null
+        # clean temporal files
+        rm xformparams.txt > /dev/null 2> /dev/null
+    else
+       echo ${s}Hz" directory found. Skipping resampling."
+    fi
+done
+# go to the original dir and done!
+cd ${workdir}
+echo "Done!"
+exit 0
