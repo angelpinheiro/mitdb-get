@@ -23,6 +23,30 @@ This script uses `wget` for downloading the database from [PhysioNet](https://ww
 
 ```
 
+The original files of the MIT-BIH database will be located in a 360Hz folder inside the download directory you provided (`mitdb` by default). If the `-f` option is present, a folder for each one of the provided sampling
+frequencies will also be created and the converted files placed inside, as sown in the next example:
+
+```sh
+$ mitdb-get -a -o /tmp/mitdb -f 200,250,300
+$ tree -a /tmp/mitdb/ -P 100*
+/tmp/mitdb/
+├── 200Hz
+│   ├── 100.hea
+│   ├── 100.dat
+│   └── 100.atr
+├── 250Hz
+│   ├── 100.hea
+│   ├── 100.dat
+│   └── 100.atr
+├── 300Hz
+│   ├── 100.hea
+│   ├── 100.dat
+│   └── 100.atr
+└── 360Hz
+    ├── 100.hea
+    ├── 100.dat
+    └── 100.atr
+```
 
 ### Available options:
 
