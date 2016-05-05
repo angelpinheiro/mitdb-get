@@ -56,7 +56,7 @@ fi
 
 # download MIT-BIH database if not present, assuming that the existence of
 # a directory called ${DOWNLOAD_DIR} means that the database is present
-if [ ! -d ${DOWNLOAD_DIR} ]; then
+if [ ! -d ${DOWNLOAD_DIR}/360Hz ]; then
     mkdir -p ${DOWNLOAD_DIR}/360Hz
     echo "Downloading MIT-BIH database to ${DOWNLOAD_DIR} ..."
     cd ${DOWNLOAD_DIR}/360Hz

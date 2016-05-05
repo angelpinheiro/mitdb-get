@@ -48,6 +48,8 @@ $ tree -a /tmp/mitdb/ -P 100*
     └── 100.atr
 ```
 
+As a precaution to avoid overriding existing files, resampling will be skipped if a directory with the resulting name (Ex: `250Hz`) already exists. In the same way, no files will be downloaded if a folder named `360Hz` is present in the download directory.
+
 ### Available options:
 
 - `-a --all` Download all database records
