@@ -2,7 +2,7 @@
 ################################################################################
 # @author       : Ángel Piñeiro
 # @date         : 24/11/2014
-# @version      : 1.1
+# @version      : 1.0
 # @usage        : ./mitdb-get (-a|-r record) [-f sampfrec] [-o outputfolder]
 # @description  :
 #
@@ -47,12 +47,7 @@ do
   shift
 done
 
-#echo "DOWNLOADALL: "${DOWNLOAD_FULL_DB}
-#echo "DOWNLOADDIR: "${DOWNLOAD_DIR}
-#echo "RECORD: "${record}
-#echo "SAMPFREQ: "${sampfrec}
-#echo "RESAMPLE: "${RESAMPLE_AFTER_DL}
-
+# check one of -a or -r options is present
 if [ "$record" = false ] && [ "$DOWNLOAD_FULL_DB" = false ]; then
   echo ${USAGE}
   echo -e "       One of -a or -r options is required"
