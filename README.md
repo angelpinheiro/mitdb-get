@@ -1,6 +1,6 @@
 ## mitdb-get
 
-mitdb-get is a coomand line tool for downloading and resampling the MIT-BIH Arrhythmia Database from [PhysioNet](https://www.physionet.org/physiobank/database/mitdb/)
+mitdb-get is a command line tool for downloading and resampling the MIT-BIH Arrhythmia Database from [PhysioNet](https://www.physionet.org/physiobank/database/mitdb/)
 
 ### Installation
 
